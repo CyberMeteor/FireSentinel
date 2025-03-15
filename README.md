@@ -1,10 +1,12 @@
 # FireSentinel: Shopping Center Intelligent Fire Protection System
 
-![FireSentinel Logo](img/logo.jpg)
+<div align="center">
+  <img src="img/logo.jpg" alt="FireSentinel Logo" width="200">
+</div>
 
 ## Project Overview
 
-FireSentinel is an advanced, high-performance fire protection and monitoring system designed specifically for large shopping centers and commercial complexes. The system provides comprehensive real-time monitoring, early detection, and rapid response capabilities to ensure the safety of thousands of visitors and staff.
+FireSentinel is a **high-performance**, **high-concurrency** fire protection and monitoring system specifically designed for large shopping centers and commercial complexes. The system provides comprehensive real-time monitoring, early detection, and rapid response capabilities ven under heavy operational loads to ensure the safety of thousands of visitors and staff.
 
 Built on a modern, resilient architecture, FireSentinel is capable of:
 - Supporting 5,000+ concurrent device connections across multiple zones and floors
@@ -342,18 +344,3 @@ Please ensure your code follows our coding standards and includes appropriate te
 - **Advanced Analytics**: Deeper insights into system performance and fire safety patterns
 - **Integration with Building Management Systems**: Connect with HVAC, access control, and other building systems
 - **Multi-Tenancy Support**: Enable management of multiple shopping centers from a single instance
-
-## Changelog
-
-### v1.0.0 
-- Initial release with core functionality
-
-### v1.1.0 
-- Added resilience patterns with Resilience4j
-- Improved alarm distribution with fallback mechanisms
-- Enhanced monitoring with Prometheus and Grafana integration
-
-### v1.2.0
-- Added distributed tracing with OpenTelemetry
-- Implemented in-memory caching for alarm history
-- Improved performance of time-window queries 
