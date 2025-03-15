@@ -1,49 +1,47 @@
 package com.firesentinel.alarmsystem.service;
 
 import com.firesentinel.alarmsystem.model.AlarmEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * Service for distributing alarm notifications through multiple channels.
- * This service acts as a facade for different notification mechanisms like WebSocket and MQTT.
+ * Service for distributing alarm events to various notification channels.
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class AlarmDistributionService {
-    private static final Logger logger = LoggerFactory.getLogger(AlarmDistributionService.class);
-    
-    private final AlarmNotificationService webSocketService;
-    private final MqttAlarmService mqttService;
-    
+
+    private final AlarmNotificationService alarmNotificationService;
+    private final MqttAlarmService mqttAlarmService;
+    private final AlarmHistoryService alarmHistoryService;
+    private final DataSyncService dataSyncService;
+
     /**
-     * Constructs a new AlarmDistributionService with the required dependencies.
-     * 
-     * @param webSocketService The WebSocket notification service
-     * @param mqttService The MQTT notification service
-     */
-    public AlarmDistributionService(AlarmNotificationService webSocketService, MqttAlarmService mqttService) {
-        this.webSocketService = webSocketService;
-        this.mqttService = mqttService;
-    }
-    
-    /**
-     * Distributes an alarm event to all configured notification channels.
-     * Currently supports WebSocket and MQTT.
-     * 
+     * Distributes an alarm event to all notification channels.
+     *
      * @param alarmEvent The alarm event to distribute
      */
     public void distributeAlarm(AlarmEvent alarmEvent) {
+        log.debug("Distributing alarm event: {}", alarmEvent.getId());
+        
         try {
-            // Send via WebSocket
-            webSocketService.sendAlarmNotification(alarmEvent);
+            // Store the alarm event in the history
+            alarmHistoryService.storeAlarmEvent(alarmEvent);
             
-            // Send via MQTT
-            mqttService.sendAlarmNotification(alarmEvent);
+            // Send WebSocket notification
+            alarmNotificationService.sendAlarmNotification(alarmEvent);
             
-            logger.info("Distributed alarm notification: {} via all channels", alarmEvent.getId());
+            // Send MQTT notification
+            mqttAlarmService.sendAlarmNotification(alarmEvent);
+            
+            // Push the alarm update through the data sync service
+            dataSyncService.pushAlarmUpdate(alarmEvent);
+            
+            log.info("Alarm event distributed successfully: {}", alarmEvent.getId());
         } catch (Exception e) {
-            logger.error("Failed to distribute alarm notification: {}", e.getMessage(), e);
+            log.error("Failed to distribute alarm event: {}", e.getMessage(), e);
         }
     }
 } 

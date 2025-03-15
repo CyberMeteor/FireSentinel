@@ -164,7 +164,7 @@ public class AlarmEventConsumerService {
         // Set basic properties
         target.setId(source.getId().toString());
         target.setDeviceId(source.getDeviceId());
-        target.setAlarmType(source.getAlarmType());
+        target.setType(source.getAlarmType());
         
         // Convert severity string to enum
         String severityStr = source.getSeverity().toUpperCase();

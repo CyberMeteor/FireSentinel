@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireSentinel Mall Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .visualization {
+            flex: 1;
+            position: relative;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+        
+        .status-panel {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            font-weight: bold;
+        }
+        
+        .status-value {
+            text-align: right;
+        }
+        
+        .status-value.connected {
+            color: #2ecc71;
+        }
+        
+        .status-value.disconnected {
+            color: #e74c3c;
+        }
+        
+        .alarm-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .alarm-item {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .alarm-item.high {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .alarm-item.medium {
+            border-left: 4px solid #f39c12;
+        }
+        
+        .alarm-item.low {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .alarm-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .alarm-severity {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+        
+        .alarm-severity.high {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .alarm-severity.medium {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .alarm-severity.low {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .alarm-time {
+            font-size: 0.8rem;
+            color: #bdc3c7;
+        }
+        
+        .alarm-details {
+            font-size: 0.9rem;
+        }
+        
+        .alarm-detail {
+            margin-bottom: 3px;
+        }
+        
+        .alarm-detail-label {
+            font-weight: bold;
+            color: #bdc3c7;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(44, 62, 80, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 100;
+        }
+        
+        .controls button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .controls button:hover {
+            background-color: #2980b9;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(44, 62, 80, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid #3498db;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="visualization" class="visualization">
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+            <div class="controls">
+                <button id="reset-camera">Reset Camera</button>
+                <button id="toggle-floor-1">Floor 1</button>
+                <button id="toggle-floor-2">Floor 2</button>
+                <button id="toggle-floor-3">Floor 3</button>
+            </div>
+        </div>
+        <div class="sidebar">
+            <h1>FireSentinel Dashboard</h1>
+            
+            <div class="status-panel">
+                <div class="status-item">
+                    <span class="status-label">WebSocket:</span>
+                    <span id="websocket-status" class="status-value disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">MQTT:</span>
+                    <span id="mqtt-status" class="status-value disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Active Devices:</span>
+                    <span id="active-devices" class="status-value">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Active Alarms:</span>
+                    <span id="active-alarms" class="status-value">0</span>
+                </div>
+            </div>
+            
+            <h2>Recent Alarms</h2>
+            <div id="alarm-list" class="alarm-list">
+                <!-- Alarm items will be added here dynamically -->
+                <div class="alarm-item high">
+                    <div class="alarm-header">
+                        <span class="alarm-severity high">High</span>
+                        <span class="alarm-time">12:34:56</span>
+                    </div>
+                    <div class="alarm-details">
+                        <div class="alarm-detail">
+                            <span class="alarm-detail-label">Type:</span> Fire
+                        </div>
+                        <div class="alarm-detail">
+                            <span class="alarm-detail-label">Device:</span> device-floor-1-3
+                        </div>
+                        <div class="alarm-detail">
+                            <span class="alarm-detail-label">Location:</span> Floor 1, Zone A
+                        </div>
+                    </div>
+                </div>
+                <div class="alarm-item medium">
+                    <div class="alarm-header">
+                        <span class="alarm-severity medium">Medium</span>
+                        <span class="alarm-time">12:30:22</span>
+                    </div>
+                    <div class="alarm-details">
+                        <div class="alarm-detail">
+                            <span class="alarm-detail-label">Type:</span> Smoke
+                        </div>
+                        <div class="alarm-detail">
+                            <span class="alarm-detail-label">Device:</span> device-floor-2-7
+                        </div>
+                        <div class="alarm-detail">
+                            <span class="alarm-detail-label">Location:</span> Floor 2, Zone C
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SockJS and STOMP for WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    
+    <!-- Three.js for 3D visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/mall-visualization.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the visualization
+            window.FireSentinelVisualization.init('visualization');
+            
+            // Hide loading overlay after initialization
+            setTimeout(() => {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }, 2000);
+            
+            // Set up button event listeners
+            document.getElementById('reset-camera').addEventListener('click', function() {
+                // Reset camera position
+                if (window.FireSentinelVisualization.resetCamera) {
+                    window.FireSentinelVisualization.resetCamera();
+                }
+            });
+            
+            // Set up WebSocket status updates
+            const updateConnectionStatus = (type, connected) => {
+                const statusElement = document.getElementById(`${type}-status`);
+                if (statusElement) {
+                    statusElement.textContent = connected ? 'Connected' : 'Disconnected';
+                    statusElement.className = `status-value ${connected ? 'connected' : 'disconnected'}`;
+                }
+            };
+            
+            // Mock WebSocket connection for demonstration
+            setTimeout(() => updateConnectionStatus('websocket', true), 1500);
+            setTimeout(() => updateConnectionStatus('mqtt', true), 2500);
+            
+            // Update active devices count
+            setInterval(() => {
+                document.getElementById('active-devices').textContent = 
+                    Object.values(window.FireSentinelVisualization.getDevices ? 
+                        window.FireSentinelVisualization.getDevices() : {}).filter(d => d.status === 'active').length;
+                
+                document.getElementById('active-alarms').textContent = 
+                    Object.values(window.FireSentinelVisualization.getDevices ? 
+                        window.FireSentinelVisualization.getDevices() : {}).filter(d => d.status === 'alarm').length;
+            }, 1000);
+            
+            // Clean up on page unload
+            window.addEventListener('beforeunload', function() {
+                if (window.FireSentinelVisualization.cleanup) {
+                    window.FireSentinelVisualization.cleanup();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

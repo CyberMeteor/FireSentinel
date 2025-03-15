@@ -21,12 +21,13 @@ public class AlarmEvent {
     private String deviceId;
     private Instant timestamp;
     private AlarmSeverity severity;
-    private String alarmType;
+    private String type;
     private String message;
     private Double value;
     private String unit;
     
     // Location information
+    private String location;
     private Double locationX;
     private Double locationY;
     private Double locationZ;
