@@ -46,7 +46,7 @@ public class FireSuppressionService {
             
             // Create the Redis scripts
             activateSuppressionScript = new DefaultRedisScript<>(activateSuppressionLua, Boolean.class);
-            getDeviceStatusScript = new DefaultRedisScript<>(getDeviceStatusLua, Map.class);
+            getDeviceStatusScript = new DefaultRedisScript<>(getDeviceStatusLua, (Class<Map<Object, Object>>)(Class<?>) Map.class);
             incrementSuppressionCounterScript = new DefaultRedisScript<>(incrementSuppressionCounterLua, Long.class);
             
             log.info("Initialized Redis Lua scripts for fire suppression");
