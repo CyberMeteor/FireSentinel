@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireSentinel Alarm Dashboard</title>
+    <link rel="stylesheet" href="css/alarm-dashboard.css">
+    <!-- SockJS and STOMP for WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <!-- Paho MQTT for MQTT -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="js/alarm-client.js"></script>
+</head>
+<body>
+    <header>
+        <h1>FireSentinel Alarm Dashboard</h1>
+        <div class="connection-status">
+            <div class="status-item">
+                <span class="status-label">WebSocket:</span>
+                <span id="websocket-status" class="disconnected">Disconnected</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">MQTT:</span>
+                <span id="mqtt-status" class="disconnected">Disconnected</span>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="alarm-controls">
+            <div class="alarm-count-container">
+                <span class="alarm-count-label">Active Alarms:</span>
+                <span id="alarm-count" class="alarm-count">0</span>
+            </div>
+            <div class="filter-container">
+                <label for="severity-filter">Filter by Severity:</label>
+                <select id="severity-filter">
+                    <option value="all">All</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="alarm-list" class="alarm-list">
+            <!-- Alarm items will be added here dynamically -->
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2023 FireSentinel. All rights reserved.</p>
+    </footer>
+    
+    <!-- Alarm sound -->
+    <audio id="alarm-sound" src="audio/alarm.mp3" preload="auto"></audio>
+</body>
+</html> 

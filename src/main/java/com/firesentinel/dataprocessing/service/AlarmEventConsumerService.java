@@ -1,5 +1,7 @@
 package com.firesentinel.dataprocessing.service;
 
+import com.firesentinel.alarmsystem.model.AlarmSeverity;
+import com.firesentinel.alarmsystem.service.AlarmDistributionService;
 import com.firesentinel.dataprocessing.model.AlarmEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AlarmEventConsumerService {
 
     private final FireSuppressionService fireSuppressionService;
+    private final AlarmDistributionService alarmDistributionService;
     
     // In-memory storage for active alarms (in a real system, this would be in a database)
     private final ConcurrentHashMap<String, CopyOnWriteArrayList<AlarmEvent>> activeAlarmsByDevice = new ConcurrentHashMap<>();
@@ -126,11 +129,84 @@ public class AlarmEventConsumerService {
             }
         }
         
+        // Distribute the alarm to all notification channels
+        try {
+            // Convert dataprocessing.model.AlarmEvent to alarmsystem.model.AlarmEvent
+            com.firesentinel.alarmsystem.model.AlarmEvent alarmEventForDistribution = 
+                    convertToAlarmSystemEvent(alarmEvent);
+            
+            // Distribute the alarm
+            alarmDistributionService.distributeAlarm(alarmEventForDistribution);
+            log.info("Distributed alarm notification for device: {}", alarmEvent.getDeviceId());
+        } catch (Exception e) {
+            log.error("Error distributing alarm notification for device: {}", 
+                    alarmEvent.getDeviceId(), e);
+        }
+        
         // In a real system, we would also:
         // 1. Store the alarm in a database
         // 2. Send notifications to relevant personnel
         // 3. Update dashboards and monitoring systems
         // 4. Trigger other automated responses
+    }
+    
+    /**
+     * Converts a dataprocessing AlarmEvent to an alarmsystem AlarmEvent.
+     * This is needed because the two systems use different model classes.
+     *
+     * @param source The source alarm event from the dataprocessing module
+     * @return The converted alarm event for the alarmsystem module
+     */
+    private com.firesentinel.alarmsystem.model.AlarmEvent convertToAlarmSystemEvent(AlarmEvent source) {
+        com.firesentinel.alarmsystem.model.AlarmEvent target = 
+                new com.firesentinel.alarmsystem.model.AlarmEvent();
+        
+        // Set basic properties
+        target.setId(source.getId().toString());
+        target.setDeviceId(source.getDeviceId());
+        target.setAlarmType(source.getAlarmType());
+        
+        // Convert severity string to enum
+        String severityStr = source.getSeverity().toUpperCase();
+        AlarmSeverity severity;
+        try {
+            severity = AlarmSeverity.valueOf(severityStr);
+        } catch (IllegalArgumentException e) {
+            // Default to HIGH if the severity doesn't match
+            log.warn("Unknown severity: {}, defaulting to HIGH", severityStr);
+            severity = AlarmSeverity.HIGH;
+        }
+        target.setSeverity(severity);
+        
+        target.setTimestamp(source.getTimestamp());
+        
+        // Set value information
+        target.setValue(source.getValue());
+        target.setUnit(source.getUnit());
+        
+        // Set location information
+        target.setLocationX(source.getLocationX());
+        target.setLocationY(source.getLocationY());
+        target.setLocationZ(source.getLocationZ());
+        target.setBuildingId(source.getBuildingId());
+        target.setFloorId(source.getFloorId());
+        target.setRoomId(source.getRoomId());
+        target.setZoneId(source.getZoneId());
+        
+        // Set additional information
+        target.setMessage("Alarm: " + source.getAlarmType() + " - " + source.getSeverity());
+        target.setNotes(source.getNotes());
+        target.setMetadata(source.getMetadata());
+        
+        // Set status information
+        target.setAcknowledged(source.getAcknowledged() != null ? source.getAcknowledged() : false);
+        target.setAcknowledgedAt(source.getAcknowledgedAt());
+        target.setAcknowledgedBy(source.getAcknowledgedBy());
+        target.setResolved(source.getResolved() != null ? source.getResolved() : false);
+        target.setResolvedAt(source.getResolvedAt());
+        target.setResolvedBy(source.getResolvedBy());
+        
+        return target;
     }
     
     /**

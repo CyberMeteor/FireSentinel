@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Model class representing an alarm event.
@@ -19,32 +19,31 @@ public class AlarmEvent {
 
     private String id;
     private String deviceId;
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private AlarmSeverity severity;
     private String alarmType;
-    private String description;
-    private String location;
-    private Double latitude;
-    private Double longitude;
+    private String message;
+    private Double value;
+    private String unit;
+    
+    // Location information
+    private Double locationX;
+    private Double locationY;
+    private Double locationZ;
     private String buildingId;
     private String floorId;
     private String roomId;
+    private String zoneId;
+    
+    // Status information
     private boolean acknowledged;
-    private LocalDateTime acknowledgedAt;
+    private Instant acknowledgedAt;
     private String acknowledgedBy;
     private boolean resolved;
-    private LocalDateTime resolvedAt;
+    private Instant resolvedAt;
     private String resolvedBy;
+    
+    // Additional information
+    private String notes;
     private String metadata;
-
-    /**
-     * Enum representing the severity levels of an alarm.
-     */
-    public enum AlarmSeverity {
-        INFO,
-        WARNING,
-        MINOR,
-        MAJOR,
-        CRITICAL
-    }
 } 
