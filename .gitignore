@@ -8,6 +8,7 @@ target/
 *.bz2
 *.rar
 *.7z
+*.class
 
 .idea/
 *.iml
